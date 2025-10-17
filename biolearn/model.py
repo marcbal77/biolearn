@@ -816,7 +816,6 @@ def map_ensembl_to_gene(rna_matrix):
 
 class DeconvolutionModel:
     def __init__(self, reference_file, platform_input):
-
         # sets reference data
         self.reference = pd.read_csv(
             get_data_file(reference_file), index_col=0
@@ -827,14 +826,12 @@ class DeconvolutionModel:
 
     @classmethod
     def from_definition(cls, clock_definition):
-
         model_def = clock_definition["model"]
 
         # calls constructor: "__init__()"
         return cls(model_def["file"], model_def["platform"])
 
     def predict(self, geo_data):
-
         # This function computes estimate of cell proportions using quadratic programming
         # inputs:
         # meth_vector: ndarray vector of bulk methylation (length must equal number of rows in deconv_reference)
@@ -842,7 +839,6 @@ class DeconvolutionModel:
         # outputs:
         # cell_prop_estimate.value: ndarray vector of estimated cell type proportions
         def solve_qp(meth_vector, deconv_reference):
-
             # define cell proportion variable being solved for
             cell_prop_estimate = cp.Variable(deconv_reference.shape[1])
 
@@ -1440,17 +1436,20 @@ class HurdleAPIModel:
             if not available_cpgs:
                 raise ValueError("No required CpG sites found in data")
 
-            # Use available sites and impute missing ones with 0.5
-            filtered_dnam = dnam.loc[available_cpgs]
-
+            # Check for missing CpGs and raise error if any are missing
             if missing_cpgs:
-                warnings.warn(
-                    f"Missing {len(missing_cpgs)} required CpG sites. Imputing with 0.5"
+                n_missing = len(missing_cpgs)
+                n_required = len(self.required_cpgs)
+                sample_missing = list(missing_cpgs)[:5]
+
+                raise ValueError(
+                    f"Missing {n_missing}/{n_required} required CpG sites. "
+                    f"Examples: {sample_missing}. "
+                    f"Please impute missing values before calling predict() or use "
+                    f"ModelGallery.get('HurdleInflammAge', imputation_method='averaging')"
                 )
-                missing_df = pd.DataFrame(
-                    0.5, index=list(missing_cpgs), columns=dnam.columns
-                )
-                filtered_dnam = pd.concat([filtered_dnam, missing_df])
+
+            filtered_dnam = dnam.loc[available_cpgs]
         else:
             filtered_dnam = dnam
 
