@@ -120,7 +120,12 @@ def _linear_methylation_model():
         {"CoefficientTraining": [0.5, 0.5, 1.0]},
         index=["cg1", "cg2", "intercept"],
     )
-    return LinearMethylationModel(coeffs, transform=lambda x: x, name="TestLM")
+    return LinearMethylationModel(
+        coeffs,
+        transform=lambda x: x,
+        preprocess=lambda x: x,
+        name="TestLM",
+    )
 
 
 def test_linear_methylation_required_features():

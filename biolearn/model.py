@@ -1499,9 +1499,9 @@ class LinearModel:
         )
 
     def predict(self, geo_data):
-        self._validate_inputs(geo_data)
         matrix_data = self._get_data_matrix(geo_data)
         matrix_data = self.preprocess(matrix_data)
+        self._validate_inputs(geo_data, matrix_data)
         matrix_data.loc["intercept"] = 1
 
         # Join the coefficients and dnam_data on the index
@@ -1529,7 +1529,7 @@ class LinearModel:
         )
         return RequiredFeatures(self._LAYER, features)
 
-    def _validate_inputs(self, geo_data):
+    def _validate_inputs(self, geo_data, matrix_data):
         return
 
     def _get_data_matrix(self, geo_data):
@@ -1540,8 +1540,12 @@ class LinearMethylationModel(LinearModel):
     def _get_data_matrix(self, geo_data):
         return geo_data.dnam
 
-    def _validate_inputs(self, geo_data):
-        validate_required_features(self, geo_data)
+    def _validate_inputs(self, geo_data, matrix_data):
+        # Preprocessing can supply missing CpGs, as in DunedinPACE. Validate
+        # the matrix used for prediction without replacing the caller's data.
+        validate_required_features(
+            self, GeoData(metadata=geo_data.metadata, dnam=matrix_data)
+        )
 
     def methylation_sites(self):
         unique_vars = set(self.coefficients.index) - {"intercept"}
